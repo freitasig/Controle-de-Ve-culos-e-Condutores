@@ -134,10 +134,101 @@ export default function App() {
     alert('Logoff efetuado com sucesso.');
   };
 
-  const handleRegisterUser = (usr: string, passwordHash: string, r: 'Administrador' | 'Operador') => {
-    const newUser = { username: usr, passwordHash, role: r };
+  const handleRegisterUser = (
+    usr: string, 
+    passwordHash: string, 
+    r: 'Administrador' | 'Operador',
+    securityQuestion: string,
+    securityAnswerHash: string
+  ) => {
+    const newUser = { username: usr, passwordHash, role: r, securityQuestion, securityAnswerHash };
     const updated = [...users, newUser];
     syncAndSave('cnpj_users', updated, setUsers);
+  };
+
+  const handleUpdateUserPassword = (username: string, newPasswordHash: string) => {
+    const updatedUsers = users.map(u => 
+      u.username.toLowerCase() === username.toLowerCase() 
+        ? { ...u, passwordHash: newPasswordHash, password: undefined } 
+        : u
+    );
+    syncAndSave('cnpj_users', updatedUsers, setUsers);
+  };
+
+  // Account Settings Modal State
+  const [showAccountModal, setShowAccountModal] = useState(false);
+  const [newAccUsername, setNewAccUsername] = useState('');
+  const [currAccPassword, setCurrAccPassword] = useState('');
+  const [newAccPassword, setNewAccPassword] = useState('');
+  const [confirmAccPassword, setConfirmAccPassword] = useState('');
+
+  const handleOpenAccountModal = () => {
+    setNewAccUsername(currentUser || '');
+    setCurrAccPassword('');
+    setNewAccPassword('');
+    setConfirmAccPassword('');
+    setShowAccountModal(true);
+  };
+
+  const handleChangeAccountInfo = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Find current user object
+    const userIndex = users.findIndex(u => u.username.toLowerCase() === currentUser?.toLowerCase());
+    if (userIndex === -1) return;
+
+    const userObj = users[userIndex];
+    
+    // Verify password
+    const currentHash = btoa(currAccPassword);
+    if (userObj.passwordHash !== currentHash && userObj.password !== currAccPassword) {
+      alert('Senha atual incorreta.');
+      return;
+    }
+
+    let updatedUsername = currentUser || '';
+    let updatedUsers = [...users];
+
+    // 1. Change Username
+    if (newAccUsername.trim() && newAccUsername.trim().toLowerCase() !== currentUser?.toLowerCase()) {
+      const targetName = newAccUsername.trim().toLowerCase();
+      const isTaken = users.some((u, idx) => idx !== userIndex && u.username.toLowerCase() === targetName);
+      if (isTaken) {
+        alert('Este nome de usuário já está em uso.');
+        return;
+      }
+      updatedUsername = targetName;
+      updatedUsers[userIndex].username = targetName;
+    }
+
+    // 2. Change Password
+    if (newAccPassword) {
+      if (newAccPassword !== confirmAccPassword) {
+        alert('As novas senhas não coincidem.');
+        return;
+      }
+      if (newAccPassword.length < 4) {
+        alert('A nova senha deve conter no mínimo 4 caracteres.');
+        return;
+      }
+      updatedUsers[userIndex].passwordHash = btoa(newAccPassword);
+      // Remove legacy plain-text password if present
+      delete updatedUsers[userIndex].password;
+    }
+
+    // Save states
+    syncAndSave('cnpj_users', updatedUsers, setUsers);
+    
+    // Update session
+    setCurrentUser(updatedUsername);
+    localStorage.setItem('cnpj_session_user', updatedUsername);
+
+    setCurrAccPassword('');
+    setNewAccPassword('');
+    setConfirmAccPassword('');
+    setShowAccountModal(false);
+
+    alert('Dados da conta atualizados com sucesso!');
   };
 
   // Company State Definition
@@ -580,6 +671,7 @@ export default function App() {
         onLoginSuccess={handleLoginSuccess}
         existingUsers={users}
         onRegisterUser={handleRegisterUser}
+        onUpdateUserPassword={handleUpdateUserPassword}
       />
     );
   }
@@ -708,12 +800,21 @@ export default function App() {
             </div>
           </div>
           
-          <button
-            onClick={handleLogoff}
-            className="w-full flex items-center justify-center gap-1.5 py-2 px-2 bg-rose-950/30 hover:bg-rose-900/40 text-[10px] font-bold tracking-wide text-rose-450 border border-rose-900/30 transition-all rounded-lg cursor-pointer"
-          >
-            🚪 Sair do Sistema (Logoff)
-          </button>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={handleOpenAccountModal}
+              className="flex items-center justify-center gap-1 py-2 px-1 bg-slate-800 hover:bg-slate-700 text-[10px] font-bold tracking-wide text-slate-200 border border-slate-700 rounded-lg cursor-pointer transition-all"
+            >
+              ⚙️ Minha Conta
+            </button>
+            
+            <button
+              onClick={handleLogoff}
+              className="flex items-center justify-center gap-1 py-2 px-1 bg-rose-950/30 hover:bg-rose-900/40 text-[10px] font-bold tracking-wide text-rose-450 border border-rose-900/30 transition-all rounded-lg cursor-pointer"
+            >
+              🚪 Sair (Logoff)
+            </button>
+          </div>
         </div>
 
         <div className="p-4 bg-slate-950 border-t border-slate-850 flex flex-col gap-3">
@@ -1142,6 +1243,95 @@ export default function App() {
                 <button
                   type="submit"
                   className="h-10 px-5 bg-indigo-650 hover:bg-slate-900 text-white text-xs font-black rounded-xl transition-all cursor-pointer"
+                >
+                  Salvar Alterações
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showAccountModal && (
+        <div className="fixed inset-0 bg-slate-900/65 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in" id="account-settings-modal">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl w-full max-w-md text-slate-100 overflow-hidden relative">
+            <div className="p-6 border-b border-slate-850 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-indigo-500/10 text-indigo-400 rounded-lg">
+                  <User size={18} />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white leading-tight">Configurações da Conta</h3>
+                  <p className="text-[10px] text-slate-400 font-medium font-sans">Altere seu nome de usuário ou senha de acesso.</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowAccountModal(false)}
+                className="text-slate-400 hover:text-white transition"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleChangeAccountInfo} className="p-6 space-y-4">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Nome de Usuário</label>
+                <input
+                  type="text"
+                  required
+                  value={newAccUsername}
+                  onChange={(e) => setNewAccUsername(e.target.value)}
+                  className="w-full h-10 px-3 bg-slate-950 border border-slate-800 rounded-xl text-xs font-semibold focus:outline-none focus:border-indigo-500 text-slate-200"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Nova Senha (Opcional)</label>
+                <input
+                  type="password"
+                  placeholder="Deixe em branco para não alterar"
+                  value={newAccPassword}
+                  onChange={(e) => setNewAccPassword(e.target.value)}
+                  className="w-full h-10 px-3 bg-slate-950 border border-slate-800 rounded-xl text-xs font-semibold focus:outline-none focus:border-indigo-500 text-slate-200"
+                />
+              </div>
+
+              {newAccPassword && (
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Confirmar Nova Senha</label>
+                  <input
+                    type="password"
+                    placeholder="Repita a nova senha"
+                    value={confirmAccPassword}
+                    onChange={(e) => setConfirmAccPassword(e.target.value)}
+                    className="w-full h-10 px-3 bg-slate-950 border border-slate-800 rounded-xl text-xs font-semibold focus:outline-none focus:border-indigo-500 text-slate-200"
+                  />
+                </div>
+              )}
+
+              <div className="space-y-1 border-t border-slate-850 pt-3 mt-2">
+                <label className="text-[10px] font-bold text-rose-400 uppercase tracking-wide">Senha Atual (Confirmação) *</label>
+                <input
+                  type="password"
+                  required
+                  placeholder="Confirme sua senha atual para salvar"
+                  value={currAccPassword}
+                  onChange={(e) => setCurrAccPassword(e.target.value)}
+                  className="w-full h-10 px-3 bg-slate-950 border border-rose-900/40 rounded-xl text-xs font-semibold focus:outline-none focus:border-rose-500 text-slate-250"
+                />
+              </div>
+
+              <div className="pt-4 border-t border-slate-850 flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setShowAccountModal(false)}
+                  className="h-10 px-4 bg-slate-800 hover:bg-slate-700 text-slate-350 text-xs font-bold rounded-xl transition cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="h-10 px-5 bg-indigo-650 hover:bg-slate-900 text-white text-xs font-bold rounded-xl transition cursor-pointer"
                 >
                   Salvar Alterações
                 </button>
