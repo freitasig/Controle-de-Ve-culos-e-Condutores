@@ -684,11 +684,11 @@ export default function App() {
       <nav className="hidden lg:flex lg:w-64 bg-slate-900 text-slate-250 flex-col shrink-0 border-r border-slate-800" id="desktop-sidebar">
         <div className="p-6 border-b border-slate-800">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-md shadow-blue-950/40">
-              <Car className="w-5 h-5" />
+            <div className="w-8 h-8 rounded bg-slate-800 flex items-center justify-center text-white shadow-md overflow-hidden shrink-0 border border-slate-700 shadow-blue-950/40">
+              <img src="/assets/profrota_logo.png" alt="ProFrota Logo" className="w-full h-full object-cover scale-110" />
             </div>
             <div>
-              <span className="font-extrabold text-base tracking-tight text-white block uppercase">FROTAMASTER</span>
+              <span className="font-extrabold text-base tracking-tight text-white block uppercase">PROFROTA</span>
               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">Gestão CNPJ</p>
             </div>
           </div>
@@ -859,11 +859,11 @@ export default function App() {
             <div>
               {/* Mobile Branding block */}
               <div className="flex items-center gap-2 lg:hidden">
-                <div className="w-7 h-7 bg-blue-600 rounded flex items-center justify-center text-white">
-                  <Car className="w-4.5 h-4.5" />
+                <div className="w-7 h-7 rounded bg-slate-100 border border-slate-200 overflow-hidden flex items-center justify-center">
+                  <img src="/assets/profrota_logo.png" alt="ProFrota Logo" className="w-full h-full object-cover scale-110" />
                 </div>
                 <div>
-                  <span className="font-extrabold text-sm tracking-tight text-slate-900 uppercase">FROTAMASTER</span>
+                  <span className="font-extrabold text-sm tracking-tight text-slate-900 uppercase">PROFROTA</span>
                   <p className="text-[8px] text-slate-405 font-bold uppercase tracking-wider">Gestão CNPJ</p>
                 </div>
               </div>
