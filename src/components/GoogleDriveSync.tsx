@@ -168,6 +168,8 @@ interface GoogleDriveSyncProps {
     userPicture?: string;
   };
   setSyncState: React.Dispatch<React.SetStateAction<any>>;
+  compact?: boolean;
+  isAdmin?: boolean;
 }
 
 export const GoogleDriveSync: React.FC<GoogleDriveSyncProps> = ({
@@ -177,6 +179,8 @@ export const GoogleDriveSync: React.FC<GoogleDriveSyncProps> = ({
   setIsConnected,
   syncState,
   setSyncState,
+  compact = false,
+  isAdmin = true,
 }) => {
   const [clientId, setClientId] = useState<string>(() => localStorage.getItem('gdrive_client_id') || '');
   const [fileId, setFileId] = useState<string>(() => localStorage.getItem('gdrive_file_id') || '');
@@ -387,6 +391,221 @@ export const GoogleDriveSync: React.FC<GoogleDriveSyncProps> = ({
       setIsConnected(true);
     }
   }, [clientId, accessToken]);
+
+  if (compact) {
+    return (
+      <div className="bg-slate-950/60 border border-slate-850 rounded-xl p-3 text-slate-100 shadow-md">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="p-1.5 bg-slate-900 rounded-lg border border-slate-800 shrink-0">
+              {syncState.status === 'connected' && (
+                <motion.div animate={{ scale: [1, 1.08, 1] }} transition={{ duration: 3, repeat: Infinity }}>
+                  <Cloud className="w-4 h-4 text-emerald-400" />
+                </motion.div>
+              )}
+              {syncState.status === 'connecting' && (
+                <RefreshCw className="w-4 h-4 text-indigo-400 animate-spin" />
+              )}
+              {syncState.status === 'disconnected' && (
+                <CloudOff className="w-4 h-4 text-amber-500" />
+              )}
+              {syncState.status === 'error' && (
+                <CloudRain className="w-4 h-4 text-rose-500" />
+              )}
+              {syncState.status === 'unconfigured' && (
+                <CloudLightning className="w-4 h-4 text-slate-500" />
+              )}
+            </div>
+            <div className="min-w-0">
+              <span className="text-[9px] font-bold text-slate-500 block leading-none uppercase">Nuvem</span>
+              <span className="text-xs font-semibold text-white truncate block mt-0.5">
+                {syncState.status === 'connected' && 'Sincronizado'}
+                {syncState.status === 'connecting' && 'Sincronizando...'}
+                {syncState.status === 'disconnected' && 'Desconectado'}
+                {syncState.status === 'error' && 'Erro Conexão'}
+                {syncState.status === 'unconfigured' && 'Não Configurado'}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1 shrink-0">
+            {syncState.status === 'unconfigured' ? (
+              isAdmin && (
+                <button
+                  type="button"
+                  onClick={() => setShowConfig(true)}
+                  className="p-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition cursor-pointer"
+                  title="Configurar Client ID"
+                >
+                  <Settings className="w-3.5 h-3.5" />
+                </button>
+              )
+            ) : isConnected ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => performSync('')}
+                  disabled={syncState.status === 'connecting'}
+                  className="p-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 rounded-lg transition cursor-pointer"
+                  title="Sincronizar Agora"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${syncState.status === 'connecting' ? 'animate-spin' : ''}`} />
+                </button>
+                {isAdmin && (
+                  <button
+                    type="button"
+                    onClick={handleDisconnect}
+                    className="p-1.5 bg-rose-950/20 hover:bg-rose-900/30 text-rose-450 border border-rose-950/30 rounded-lg transition cursor-pointer"
+                    title="Desconectar Google Drive"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={handleConnect}
+                  className="p-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition cursor-pointer"
+                  title="Conectar ao Google Drive"
+                >
+                  <Cloud className="w-3.5 h-3.5" />
+                </button>
+                {isAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => setShowConfig(true)}
+                    className="p-1.5 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800 rounded-lg transition cursor-pointer"
+                    title="Configurações"
+                  >
+                    <Settings className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+
+        {isConnected && syncState.userEmail && (
+          <div className="mt-2 text-[9px] text-slate-500 truncate bg-slate-950/40 p-1.5 rounded-lg border border-slate-900/60 leading-none">
+            Conta: <span className="font-semibold text-slate-400">{syncState.userEmail}</span>
+          </div>
+        )}
+
+        {syncState.errorMessage && (
+          <div className="mt-2 p-1.5 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[9px] rounded-lg truncate" title={syncState.errorMessage}>
+            ⚠️ {syncState.errorMessage}
+          </div>
+        )}
+
+        {/* Configurations Modal inside compact mode */}
+        <AnimatePresence>
+          {showConfig && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 text-slate-100 shadow-2xl relative"
+              >
+                <div className="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+                  <h4 className="font-bold text-white flex items-center gap-2 text-sm">
+                    <Settings className="w-4 h-4 text-indigo-400" />
+                    Configurar Credencial do Google Cloud
+                  </h4>
+                  <button type="button" onClick={() => setShowConfig(false)} className="text-slate-400 hover:text-white transition">
+                    ✕
+                  </button>
+                </div>
+
+                <form onSubmit={handleSaveConfig} className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="block text-xs font-semibold text-slate-350">
+                      Google Client ID (ID do cliente OAuth 2.0)*
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={clientId}
+                      onChange={(e) => setClientId(e.target.value)}
+                      placeholder="xxxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com"
+                      className="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 placeholder-slate-650 focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-2 border-t border-slate-800">
+                    <button
+                      type="button"
+                      onClick={() => setShowHelp(true)}
+                      className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-350 rounded-lg text-xs font-semibold transition"
+                    >
+                      Ver Passo a Passo 📖
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold transition"
+                    >
+                      Salvar Configurações
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </div>
+          )}
+
+          {showHelp && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                className="bg-slate-900 border border-slate-800 rounded-2xl max-w-xl w-full p-6 text-slate-100 shadow-2xl relative max-h-[85vh] overflow-y-auto"
+              >
+                <div className="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+                  <h4 className="font-bold text-white flex items-center gap-1.5 text-sm">
+                    <HelpCircle className="w-4 h-4 text-indigo-400" />
+                    Guia Passo a Passo: Credenciais Google Cloud
+                  </h4>
+                  <button type="button" onClick={() => setShowHelp(false)} className="text-slate-400 hover:text-white transition">
+                    ✕
+                  </button>
+                </div>
+
+                <div className="space-y-4 text-xs text-slate-350 leading-relaxed">
+                  <p>
+                    Siga o roteiro rápido abaixo para configurar seu banco de dados serverless:
+                  </p>
+                  <ol className="list-decimal pl-5 space-y-2.5 text-slate-300">
+                    <li>Acesse o <a href="https://console.cloud.google.com" target="_blank" rel="noreferrer" className="text-indigo-400 hover:underline">Google Cloud Console</a>.</li>
+                    <li>Crie um novo projeto (ex: <i>"ProFrota-DB"</i>).</li>
+                    <li>Vá em **Biblioteca** no menu lateral, ative a **Google Drive API**.</li>
+                    <li>Configure a **Tela de Consentimento OAuth** como Externo, e adicione o escopo <code className="bg-slate-950 px-1 py-0.5 rounded text-indigo-300">.../auth/drive.file</code> e o seu e-mail na aba de usuários de teste.</li>
+                    <li>Vá em **Credenciais** &gt; **Criar Credenciais** &gt; **ID do cliente OAuth** (Tipo: Aplicativo da Web).</li>
+                    <li>Em **Origens JavaScript autorizadas**, cole:
+                      <br /><code className="bg-slate-950 px-1 py-0.5 rounded text-slate-400">http://localhost:3000</code>
+                      <br /><code className="bg-slate-950 px-1 py-0.5 rounded text-slate-400">https://seu-subdominio.vercel.app</code>
+                    </li>
+                    <li>Clique em salvar, copie o **Client ID** gerado, feche este guia, cole-o no campo de configurações e salve! 🎉</li>
+                  </ol>
+                </div>
+
+                <div className="flex justify-end pt-4 border-t border-slate-800 mt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowHelp(false)}
+                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-350 rounded-lg text-xs font-semibold transition"
+                  >
+                    Fechar Guia
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 mb-6 text-slate-100 shadow-xl">

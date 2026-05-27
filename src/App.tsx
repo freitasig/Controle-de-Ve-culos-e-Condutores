@@ -19,8 +19,11 @@ import {
   RefreshCw,
   Info,
   Building2,
-  User
+  User,
+  Menu,
+  X
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Vehicle, Driver, TripLog, Maintenance, Fine, FuelLog, CompanySettings } from './types';
 import { 
   initialVehicles, 
@@ -49,6 +52,7 @@ import profrotaLogo from '../assets/profrota_logo.png';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Core State
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -683,6 +687,252 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col lg:flex-row font-sans antialiased text-slate-800" id="main-app-root">
       
+      {/* Mobile Drawer Sidebar Navigation */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <div className="fixed inset-0 z-50 lg:hidden" id="mobile-sidebar-container">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.5 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setMobileMenuOpen(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-xs"
+            />
+            
+            {/* Drawer Content */}
+            <motion.nav
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="absolute top-0 bottom-0 left-0 w-72 bg-slate-900 text-slate-250 flex flex-col border-r border-slate-800 shadow-2xl"
+              id="mobile-sidebar"
+            >
+              {/* Header */}
+              <div className="p-5 border-b border-slate-800 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded bg-slate-800 flex items-center justify-center text-white shadow-md overflow-hidden shrink-0 border border-slate-700">
+                    <img src={profrotaLogo} alt="ProFrota Logo" className="w-full h-full object-cover scale-110" />
+                  </div>
+                  <div>
+                    <span className="font-extrabold text-base tracking-tight text-white block uppercase">PROFROTA</span>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5 font-sans">Gestão CNPJ</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition cursor-pointer font-bold"
+                  aria-label="Fechar menu"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Navigation Tabs */}
+              <div className="flex-1 py-4 overflow-y-auto px-4 space-y-6">
+                <div>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2.5 px-2">Geral</p>
+                  <div className="space-y-1">
+                    <button
+                      onClick={() => {
+                        setActiveTab('dashboard');
+                        setMobileMenuOpen(false);
+                      }}
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-md justify-start transition-all cursor-pointer text-sm font-medium ${
+                        activeTab === 'dashboard'
+                          ? 'bg-blue-600 text-white font-semibold'
+                          : 'text-slate-400 hover:text-white hover:bg-slate-850'
+                      }`}
+                    >
+                      <LayoutDashboard className="w-4 h-4" />
+                      <span>Dashboard</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        setActiveTab('veiculos');
+                        setMobileMenuOpen(false);
+                      }}
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-md justify-start transition-all cursor-pointer text-sm font-medium ${
+                        activeTab === 'veiculos'
+                          ? 'bg-blue-600 text-white font-semibold'
+                          : 'text-slate-400 hover:text-white hover:bg-slate-850'
+                      }`}
+                    >
+                      <Car className="w-4 h-4" />
+                      <span>Frota de Veículos</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        setActiveTab('motoristas');
+                        setMobileMenuOpen(false);
+                      }}
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-md justify-start transition-all cursor-pointer text-sm font-medium ${
+                        activeTab === 'motoristas'
+                          ? 'bg-blue-600 text-white font-semibold'
+                          : 'text-slate-400 hover:text-white hover:bg-slate-850'
+                      }`}
+                    >
+                      <Users className="w-4 h-4" />
+                      <span>Escala Motoristas</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        setActiveTab('viagens');
+                        setMobileMenuOpen(false);
+                      }}
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-md justify-start transition-all cursor-pointer text-sm font-medium ${
+                        activeTab === 'viagens'
+                          ? 'bg-blue-600 text-white font-semibold'
+                          : 'text-slate-400 hover:text-white hover:bg-slate-850'
+                      }`}
+                    >
+                      <Clock className="w-4 h-4" />
+                      <span>Controle de Saídas</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2.5 px-2">Obrigações</p>
+                  <div className="space-y-1">
+                    <button
+                      onClick={() => {
+                        setActiveTab('manutencoes');
+                        setMobileMenuOpen(false);
+                      }}
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-md justify-start transition-all cursor-pointer text-sm font-medium ${
+                        activeTab === 'manutencoes'
+                          ? 'bg-blue-600 text-white font-semibold'
+                          : 'text-slate-400 hover:text-white hover:bg-slate-850'
+                      }`}
+                    >
+                      <Wrench className="w-4 h-4" />
+                      <span>Manutenção Preventiva</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        setActiveTab('multas');
+                        setMobileMenuOpen(false);
+                      }}
+                      className={`w-full flex items-center justify-between px-3 py-2 rounded-md transition-all cursor-pointer text-sm font-medium ${
+                        activeTab === 'multas'
+                          ? 'bg-blue-600 text-white font-semibold'
+                          : 'text-slate-400 hover:text-white hover:bg-slate-850'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <ShieldAlert className="w-4 h-4" />
+                        <span>Multas e Condutores</span>
+                      </div>
+                      {fines.filter(f => !f.driverId).length > 0 && (
+                        <span className="bg-red-500 text-white font-black text-[9px] px-1.5 py-0.5 rounded-full animate-pulse">
+                          {fines.filter(f => !f.driverId).length}
+                        </span>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Operator Profile Card and Logoff button for Mobile */}
+              <div className="p-4 bg-slate-900 border-t border-slate-850 space-y-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-xs font-black text-white uppercase border border-indigo-500 shrink-0">
+                    {currentUser ? currentUser[0].toUpperCase() : 'U'}
+                  </div>
+                  <div className="overflow-hidden flex-1">
+                    <span className="text-xs font-bold text-white block truncate leading-none">
+                      👤 {currentUser}
+                    </span>
+                    <span className="text-[9px] font-extrabold text-indigo-400 bg-indigo-950/40 px-1 py-0.5 rounded leading-none mt-1 inline-block border border-indigo-900/30 uppercase">
+                      🛡️ {currentRole}
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => {
+                      handleOpenAccountModal();
+                      setMobileMenuOpen(false);
+                    }}
+                    className="flex items-center justify-center gap-1 py-2 px-1 bg-slate-800 hover:bg-slate-700 text-[10px] font-bold tracking-wide text-slate-200 border border-slate-700 rounded-lg cursor-pointer transition-all"
+                  >
+                    ⚙️ Minha Conta
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      handleLogoff();
+                      setMobileMenuOpen(false);
+                    }}
+                    className="flex items-center justify-center gap-1 py-2 px-1 bg-rose-950/30 hover:bg-rose-900/40 text-[10px] font-bold tracking-wide text-rose-450 border border-rose-900/30 transition-all rounded-lg cursor-pointer"
+                  >
+                    🚪 Sair
+                  </button>
+                </div>
+              </div>
+
+              {/* Footer controls for Mobile */}
+              <div className="p-4 bg-slate-950 border-t border-slate-850 flex flex-col gap-3">
+                {/* Cloud Sync Panel inside Mobile Sidebar */}
+                <GoogleDriveSync 
+                  onSyncComplete={handleApplyCloudData}
+                  getCurrentData={getCurrentAppData}
+                  isConnected={isDriveConnected}
+                  setIsConnected={setIsDriveConnected}
+                  syncState={driveSyncState}
+                  setSyncState={setDriveSyncState}
+                  compact={true}
+                  isAdmin={currentRole === 'Administrador'}
+                />
+
+                {currentRole === 'Administrador' && (
+                  <button
+                    onClick={() => {
+                      setShowDbNotice(!showDbNotice);
+                      setMobileMenuOpen(false);
+                    }}
+                    className="w-full flex items-center justify-center gap-1.5 py-2 px-2 bg-slate-900 hover:bg-slate-850 text-[10px] font-bold tracking-wide text-slate-350 border border-slate-800 hover:border-slate-705 transition-all rounded-lg cursor-pointer"
+                  >
+                    <Database size={13} className="text-blue-500" />
+                    <span>Configurações DB</span>
+                  </button>
+                )}
+                
+                <button
+                  onClick={() => {
+                    handleOpenCompanyEdit();
+                    setMobileMenuOpen(false);
+                  }}
+                  type="button"
+                  className="w-full flex items-center gap-3 px-1.5 py-1.5 rounded-lg hover:bg-slate-850/60 text-left transition-all cursor-pointer border border-transparent hover:border-slate-800 group"
+                  title="Clique para cadastrar ou editar os dados da empresa"
+                >
+                  <div className="w-8 h-8 rounded bg-slate-800 flex items-center justify-center text-[10px] font-black text-blue-450 border border-slate-700 shrink-0 uppercase group-hover:text-blue-300">
+                    {company.razaoSocial ? company.razaoSocial.split(' ').map((w: string) => w[0]).slice(0, 2).join('') : 'EM'}
+                  </div>
+                  <div className="overflow-hidden flex-1">
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="text-xs font-bold text-white truncate group-hover:text-blue-400 transition-colors">{company.razaoSocial}</span>
+                      <span className="text-[8px] font-extrabold text-slate-400 bg-slate-800 px-1 py-0.5 rounded leading-none shrink-0 uppercase">
+                        {currentRole === 'Administrador' ? 'Editar' : 'Ver'}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-slate-500 font-bold block mt-1 leading-none truncate font-mono">CNPJ: {company.cnpj}</p>
+                  </div>
+                </button>
+              </div>
+            </motion.nav>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Desktop Sidebar Navigation */}
       <nav className="hidden lg:flex lg:w-64 bg-slate-900 text-slate-250 flex-col shrink-0 border-r border-slate-800" id="desktop-sidebar">
         <div className="p-6 border-b border-slate-800">
@@ -822,6 +1072,18 @@ export default function App() {
         </div>
 
         <div className="p-4 bg-slate-950 border-t border-slate-850 flex flex-col gap-3">
+          {/* Cloud Sync Panel inside Desktop Sidebar */}
+          <GoogleDriveSync 
+            onSyncComplete={handleApplyCloudData}
+            getCurrentData={getCurrentAppData}
+            isConnected={isDriveConnected}
+            setIsConnected={setIsDriveConnected}
+            syncState={driveSyncState}
+            setSyncState={setDriveSyncState}
+            compact={true}
+            isAdmin={currentRole === 'Administrador'}
+          />
+
           {currentRole === 'Administrador' && (
             <button
               onClick={() => setShowDbNotice(!showDbNotice)}
@@ -844,7 +1106,9 @@ export default function App() {
             <div className="overflow-hidden flex-1">
               <div className="flex items-center justify-between gap-1">
                 <span className="text-xs font-bold text-white truncate group-hover:text-blue-400 transition-colors">{company.razaoSocial}</span>
-                <span className="text-[8px] font-extrabold text-slate-400 bg-slate-800 px-1 py-0.5 rounded leading-none shrink-0 uppercase">Editar</span>
+                <span className="text-[8px] font-extrabold text-slate-400 bg-slate-800 px-1 py-0.5 rounded leading-none shrink-0 uppercase">
+                  {currentRole === 'Administrador' ? 'Editar' : 'Ver'}
+                </span>
               </div>
               <p className="text-[10px] text-slate-500 font-bold block mt-1 leading-none truncate font-mono">CNPJ: {company.cnpj}</p>
             </div>
@@ -862,6 +1126,14 @@ export default function App() {
             <div>
               {/* Mobile Branding block */}
               <div className="flex items-center gap-2 lg:hidden">
+                <button
+                  type="button"
+                  onClick={() => setMobileMenuOpen(true)}
+                  className="p-1.5 -ml-1 text-slate-650 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition cursor-pointer"
+                  title="Abrir Menu"
+                >
+                  <Menu size={20} />
+                </button>
                 <div className="w-7 h-7 rounded bg-slate-100 border border-slate-200 overflow-hidden flex items-center justify-center">
                   <img src={profrotaLogo} alt="ProFrota Logo" className="w-full h-full object-cover scale-110" />
                 </div>
@@ -892,13 +1164,15 @@ export default function App() {
                 <span>26/05/2026 (Auditoria)</span>
               </div>
               
-              <button
-                onClick={() => setShowDbNotice(!showDbNotice)}
-                className="p-1.5 border border-slate-200 hover:border-blue-550 hover:bg-slate-50 text-slate-600 hover:text-blue-600 transition-all rounded-lg cursor-pointer lg:hidden"
-                title="Configurações DB"
-              >
-                <Database size={15} />
-              </button>
+              {currentRole === 'Administrador' && (
+                <button
+                  onClick={() => setShowDbNotice(!showDbNotice)}
+                  className="p-1.5 border border-slate-200 hover:border-blue-550 hover:bg-slate-50 text-slate-600 hover:text-blue-600 transition-all rounded-lg cursor-pointer lg:hidden"
+                  title="Configurações DB"
+                >
+                  <Database size={15} />
+                </button>
+              )}
             </div>
           </div>
 
@@ -1032,15 +1306,6 @@ export default function App() {
         <main className="flex-1 bg-slate-100 p-4 sm:p-6 lg:p-8" id="primary-main-view">
           <div className="mx-auto max-w-7xl">
             
-            <GoogleDriveSync 
-              onSyncComplete={handleApplyCloudData}
-              getCurrentData={getCurrentAppData}
-              isConnected={isDriveConnected}
-              setIsConnected={setIsDriveConnected}
-              syncState={driveSyncState}
-              setSyncState={setDriveSyncState}
-            />
-
             {activeTab === 'dashboard' && (
               <Dashboard 
                 vehicles={vehicles}
@@ -1137,8 +1402,14 @@ export default function App() {
                   <Building2 size={20} />
                 </div>
                 <div>
-                  <h3 className="text-base font-extrabold text-slate-900 leading-tight">Cadastrar e Editar Dados da Empresa</h3>
-                  <p className="text-xs text-slate-500 font-medium">Os dados informados serão usados em relatórios e impressos de frota.</p>
+                  <h3 className="text-base font-extrabold text-slate-900 leading-tight">
+                    {currentRole === 'Administrador' ? 'Cadastrar e Editar Dados da Empresa' : 'Dados Cadastrais da Empresa'}
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium">
+                    {currentRole === 'Administrador' 
+                      ? 'Os dados informados serão usados em relatórios e impressos de frota.' 
+                      : 'Visualização de cadastro (Apenas Leitura).'}
+                  </p>
                 </div>
               </div>
               <button 
@@ -1157,10 +1428,11 @@ export default function App() {
                 <input
                   type="text"
                   required
+                  disabled={currentRole !== 'Administrador'}
                   placeholder="Nome legal / Razão social da empresa"
                   value={compRazao}
                   onChange={(e) => setCompRazao(e.target.value)}
-                  className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:opacity-75 disabled:cursor-not-allowed"
                 />
               </div>
 
@@ -1170,10 +1442,11 @@ export default function App() {
                   <input
                     type="text"
                     required
+                    disabled={currentRole !== 'Administrador'}
                     placeholder="Ex: 00.000.000/0001-00"
                     value={compCnpj}
                     onChange={(e) => setCompCnpj(e.target.value)}
-                    className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono"
+                    className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono disabled:opacity-75 disabled:cursor-not-allowed"
                   />
                 </div>
 
@@ -1181,10 +1454,11 @@ export default function App() {
                   <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Inscrição Estadual</label>
                   <input
                     type="text"
+                    disabled={currentRole !== 'Administrador'}
                     placeholder="Inscrição Estadual (IE)"
                     value={compInscEst}
                     onChange={(e) => setCompInscEst(e.target.value)}
-                    className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono"
+                    className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono disabled:opacity-75 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
@@ -1193,10 +1467,11 @@ export default function App() {
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Nome Fantasia</label>
                 <input
                   type="text"
+                  disabled={currentRole !== 'Administrador'}
                   placeholder="Nome comercial (Opcional)"
                   value={compFantasia}
                   onChange={(e) => setCompFantasia(e.target.value)}
-                  className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:opacity-75 disabled:cursor-not-allowed"
                 />
               </div>
 
@@ -1205,10 +1480,11 @@ export default function App() {
                   <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Telefone de Contato</label>
                   <input
                     type="text"
+                    disabled={currentRole !== 'Administrador'}
                     placeholder="Ex: (11) 98765-4321"
                     value={compTel}
                     onChange={(e) => setCompTel(e.target.value)}
-                    className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:opacity-75 disabled:cursor-not-allowed"
                   />
                 </div>
 
@@ -1216,10 +1492,11 @@ export default function App() {
                   <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">E-mail Corporativo</label>
                   <input
                     type="email"
+                    disabled={currentRole !== 'Administrador'}
                     placeholder="Ex: contato@empresa.com"
                     value={compEmail}
                     onChange={(e) => setCompEmail(e.target.value)}
-                    className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:opacity-75 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
@@ -1228,28 +1505,41 @@ export default function App() {
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Endereço Sede</label>
                 <input
                   type="text"
+                  disabled={currentRole !== 'Administrador'}
                   placeholder="Rua, número, bairro, cidade - UF"
                   value={compEnd}
                   onChange={(e) => setCompEnd(e.target.value)}
-                  className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:opacity-75 disabled:cursor-not-allowed"
                 />
               </div>
 
               {/* Botões do rodapé */}
               <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => setShowCompanyModal(false)}
-                  className="h-10 px-4 bg-slate-100 hover:bg-slate-200 hover:text-slate-900 text-slate-700 text-xs font-bold rounded-xl transition-all cursor-pointer"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="h-10 px-5 bg-indigo-650 hover:bg-slate-900 text-white text-xs font-black rounded-xl transition-all cursor-pointer"
-                >
-                  Salvar Alterações
-                </button>
+                {currentRole === 'Administrador' ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setShowCompanyModal(false)}
+                      className="h-10 px-4 bg-slate-100 hover:bg-slate-200 hover:text-slate-900 text-slate-700 text-xs font-bold rounded-xl transition-all cursor-pointer"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="submit"
+                      className="h-10 px-5 bg-indigo-650 hover:bg-slate-900 text-white text-xs font-black rounded-xl transition-all cursor-pointer"
+                    >
+                      Salvar Alterações
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setShowCompanyModal(false)}
+                    className="h-10 px-6 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer"
+                  >
+                    Fechar
+                  </button>
+                )}
               </div>
             </form>
           </div>
