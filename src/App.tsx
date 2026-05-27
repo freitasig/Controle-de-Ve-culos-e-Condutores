@@ -40,6 +40,9 @@ import { FinesTab } from './components/FinesTab';
 // Google Drive Sync
 import { GoogleDriveSync, updateDriveFile } from './components/GoogleDriveSync';
 
+// Login Portal
+import { LoginPortal } from './components/LoginPortal';
+
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
 
@@ -61,6 +64,11 @@ export default function App() {
     userPicture: undefined
   });
 
+  // User & Session State
+  const [users, setUsers] = useState<any[]>([]);
+  const [currentUser, setCurrentUser] = useState<string | null>(null);
+  const [currentRole, setCurrentRole] = useState<'Administrador' | 'Operador'>('Administrador');
+
   // Helper to retrieve current app data in unified JSON format
   const getCurrentAppData = () => {
     return {
@@ -70,7 +78,8 @@ export default function App() {
       maintenances,
       fines,
       fuelLogs,
-      company
+      company,
+      users
     };
   };
 
@@ -105,6 +114,30 @@ export default function App() {
       setCompany(data.company);
       localStorage.setItem('cnpj_company_info', JSON.stringify(data.company));
     }
+    if (data.users) {
+      setUsers(data.users);
+      localStorage.setItem('cnpj_users', JSON.stringify(data.users));
+    }
+  };
+
+  const handleLoginSuccess = (usr: string, r: 'Administrador' | 'Operador') => {
+    setCurrentUser(usr);
+    setCurrentRole(r);
+    localStorage.setItem('cnpj_session_user', usr);
+    localStorage.setItem('cnpj_session_role', r);
+  };
+
+  const handleLogoff = () => {
+    setCurrentUser(null);
+    localStorage.removeItem('cnpj_session_user');
+    localStorage.removeItem('cnpj_session_role');
+    alert('Logoff efetuado com sucesso.');
+  };
+
+  const handleRegisterUser = (usr: string, passwordHash: string, r: 'Administrador' | 'Operador') => {
+    const newUser = { username: usr, passwordHash, role: r };
+    const updated = [...users, newUser];
+    syncAndSave('cnpj_users', updated, setUsers);
   };
 
   // Company State Definition
@@ -218,6 +251,24 @@ export default function App() {
     if (savedCompanyInfo) {
       setCompany(JSON.parse(savedCompanyInfo));
     }
+
+    const savedUsers = localStorage.getItem('cnpj_users');
+    const savedSessionUser = localStorage.getItem('cnpj_session_user');
+    const savedSessionRole = localStorage.getItem('cnpj_session_role');
+
+    if (savedUsers) {
+      setUsers(JSON.parse(savedUsers));
+    } else {
+      // Seed default admin
+      const initialUsers = [{ username: 'admin', passwordHash: btoa('admin'), role: 'Administrador' }];
+      setUsers(initialUsers);
+      localStorage.setItem('cnpj_users', JSON.stringify(initialUsers));
+    }
+
+    if (savedSessionUser && savedSessionRole) {
+      setCurrentUser(savedSessionUser);
+      setCurrentRole(savedSessionRole as 'Administrador' | 'Operador');
+    }
   }, []);
 
   // Sync state to localstorage helper
@@ -235,6 +286,7 @@ export default function App() {
         fines: key === 'cnpj_fines' ? data : fines,
         fuelLogs: key === 'cnpj_fuel_logs' ? data : fuelLogs,
         company: key === 'cnpj_company_info' ? data : company,
+        users: key === 'cnpj_users' ? data : users, // INCLUDE USERS!
       };
       
       // Envio em segundo plano
@@ -522,6 +574,16 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  if (!currentUser) {
+    return (
+      <LoginPortal 
+        onLoginSuccess={handleLoginSuccess}
+        existingUsers={users}
+        onRegisterUser={handleRegisterUser}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col lg:flex-row font-sans antialiased text-slate-800" id="main-app-root">
       
@@ -630,14 +692,40 @@ export default function App() {
           </div>
         </div>
         
-        <div className="p-4 bg-slate-950 border-t border-slate-850 flex flex-col gap-3">
+        {/* Operator Profile Card and Logoff button */}
+        <div className="p-4 bg-slate-900 border-t border-slate-850 space-y-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-xs font-black text-white uppercase border border-indigo-500 shrink-0">
+              {currentUser ? currentUser[0].toUpperCase() : 'U'}
+            </div>
+            <div className="overflow-hidden flex-1">
+              <span className="text-xs font-bold text-white block truncate leading-none">
+                👤 {currentUser}
+              </span>
+              <span className="text-[9px] font-extrabold text-indigo-400 bg-indigo-950/40 px-1 py-0.5 rounded leading-none mt-1 inline-block border border-indigo-900/30 uppercase">
+                🛡️ {currentRole}
+              </span>
+            </div>
+          </div>
+          
           <button
-            onClick={() => setShowDbNotice(!showDbNotice)}
-            className="w-full flex items-center justify-center gap-1.5 py-2 px-2 bg-slate-900 hover:bg-slate-805 text-[10px] font-bold tracking-wide text-slate-350 border border-slate-800 hover:border-slate-705 transition-all rounded-lg cursor-pointer"
+            onClick={handleLogoff}
+            className="w-full flex items-center justify-center gap-1.5 py-2 px-2 bg-rose-950/30 hover:bg-rose-900/40 text-[10px] font-bold tracking-wide text-rose-450 border border-rose-900/30 transition-all rounded-lg cursor-pointer"
           >
-            <Database size={13} className="text-blue-500" />
-            <span>Configurações DB</span>
+            🚪 Sair do Sistema (Logoff)
           </button>
+        </div>
+
+        <div className="p-4 bg-slate-950 border-t border-slate-850 flex flex-col gap-3">
+          {currentRole === 'Administrador' && (
+            <button
+              onClick={() => setShowDbNotice(!showDbNotice)}
+              className="w-full flex items-center justify-center gap-1.5 py-2 px-2 bg-slate-900 hover:bg-slate-850 text-[10px] font-bold tracking-wide text-slate-350 border border-slate-800 hover:border-slate-705 transition-all rounded-lg cursor-pointer"
+            >
+              <Database size={13} className="text-blue-500" />
+              <span>Configurações DB</span>
+            </button>
+          )}
           
           <button
             onClick={handleOpenCompanyEdit}
