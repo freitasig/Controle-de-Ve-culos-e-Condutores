@@ -227,51 +227,29 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Corporate Dynamic Welcome Banner */}
-      {company && (
-        <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-950 rounded-2xl border border-indigo-950/40 p-6 text-white shadow-xs relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-4" id="corporate-dashboard-welcome">
-          <div className="absolute right-0 top-0 translate-x-12 -translate-y-12 opacity-15 pointer-events-none">
-            <Building2 size={220} className="text-white" />
+      {/* Dynamic Welcome Header row */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs" id="dashboard-welcome-header">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="text-[9px] font-black uppercase tracking-wider bg-slate-100 text-slate-600 px-2 py-0.5 rounded border border-slate-200 leading-none">
+              Visão Geral / Auditoria
+            </span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
           </div>
-          
-          <div className="space-y-1.5 z-10">
-            <div className="flex items-center gap-2">
-              <span className="text-[9px] font-black uppercase tracking-widest bg-indigo-500/30 text-indigo-200 px-2.5 py-0.5 rounded-full border border-indigo-400/20 leading-none">
-                Painel da Empresa
-              </span>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
-            </div>
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white leading-tight">
-              {company.razaoSocial}
-            </h1>
-            <p className="text-xs text-slate-300 font-medium leading-relaxed max-w-2xl font-sans">
-              {company.nomeFantasia && <span className="font-extrabold text-blue-400 pr-2 border-r border-indigo-800/60 mr-2">{company.nomeFantasia}</span>}
-              CNPJ: <span className="font-mono text-indigo-200 font-semibold">{company.cnpj}</span> 
-              {company.telefone && <span className="mx-2">• Tel: {company.telefone}</span>}
-              {company.endereco && <span className="block mt-1 text-[11px] text-slate-400 leading-none">Sede em: {company.endereco}</span>}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2 z-10 shrink-0">
-            <button
-              onClick={onEditCompany}
-              type="button"
-              className="px-3.5 py-2 bg-indigo-650 hover:bg-white text-white hover:text-slate-950 border border-indigo-500/35 hover:border-white text-xs font-bold rounded-xl transition-all cursor-pointer"
-            >
-              Editar Dados
-            </button>
-            <button
-              onClick={() => window.print()}
-              type="button"
-              className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 border border-slate-700"
-              title="Gerar impressão do painel principal da frota"
-            >
-              <Printer size={13} />
-              <span>Imprimir</span>
-            </button>
-          </div>
+          <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight leading-none mt-2">Visão Geral da Frota</h3>
+          <p className="text-xs text-slate-500 font-medium mt-1">Indicadores consolidados e controle ativo em tempo real.</p>
         </div>
-      )}
+        
+        <button
+          onClick={() => window.print()}
+          type="button"
+          className="px-4 py-2 bg-slate-900 hover:bg-slate-850 text-white text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 border border-slate-950"
+          title="Gerar impressão do painel principal da frota"
+        >
+          <Printer size={13} />
+          <span>Imprimir Relatório</span>
+        </button>
+      </div>
 
       {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

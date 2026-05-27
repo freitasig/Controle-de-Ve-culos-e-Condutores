@@ -905,28 +905,52 @@ export default function App() {
                   </button>
                 )}
                 
-                <button
+                <div 
                   onClick={() => {
                     handleOpenCompanyEdit();
                     setMobileMenuOpen(false);
                   }}
-                  type="button"
-                  className="w-full flex items-center gap-3 px-1.5 py-1.5 rounded-lg hover:bg-slate-850/60 text-left transition-all cursor-pointer border border-transparent hover:border-slate-800 group"
+                  className="w-full text-left bg-slate-900 border border-slate-850 rounded-xl p-3.5 text-slate-100 shadow-md cursor-pointer hover:border-slate-700 hover:bg-slate-850/40 transition group"
                   title="Clique para cadastrar ou editar os dados da empresa"
                 >
-                  <div className="w-8 h-8 rounded bg-slate-800 flex items-center justify-center text-[10px] font-black text-blue-450 border border-slate-700 shrink-0 uppercase group-hover:text-blue-300">
-                    {company.razaoSocial ? company.razaoSocial.split(' ').map((w: string) => w[0]).slice(0, 2).join('') : 'EM'}
-                  </div>
-                  <div className="overflow-hidden flex-1">
-                    <div className="flex items-center justify-between gap-1">
-                      <span className="text-xs font-bold text-white truncate group-hover:text-blue-400 transition-colors">{company.razaoSocial}</span>
-                      <span className="text-[8px] font-extrabold text-slate-400 bg-slate-800 px-1 py-0.5 rounded leading-none shrink-0 uppercase">
-                        {currentRole === 'Administrador' ? 'Editar' : 'Ver'}
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <div className="p-1 bg-indigo-500/10 rounded text-indigo-400 shrink-0">
+                        <Building2 className="w-3.5 h-3.5" />
+                      </div>
+                      <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 leading-none">
+                        Painel da Empresa
                       </span>
                     </div>
-                    <p className="text-[10px] text-slate-500 font-bold block mt-1 leading-none truncate font-mono">CNPJ: {company.cnpj}</p>
+                    <span className="text-[8px] font-extrabold text-indigo-400 bg-indigo-950/40 px-1.5 py-0.5 rounded border border-indigo-900/30 shrink-0 uppercase leading-none">
+                      {currentRole === 'Administrador' ? 'Editar' : 'Ver'}
+                    </span>
                   </div>
-                </button>
+
+                  <div className="space-y-1">
+                    <h4 className="text-xs font-extrabold text-white leading-tight group-hover:text-blue-400 transition-colors truncate font-sans">
+                      {company.razaoSocial}
+                    </h4>
+                    {company.nomeFantasia && (
+                      <p className="text-[10px] text-blue-400 font-extrabold leading-none truncate font-sans">
+                        {company.nomeFantasia}
+                      </p>
+                    )}
+                    <p className="text-[9px] text-slate-400 font-medium block leading-none font-mono">
+                      CNPJ: <span className="text-indigo-200">{company.cnpj}</span>
+                    </p>
+                    {company.telefone && (
+                      <p className="text-[9px] text-slate-400 block leading-none">
+                        📞 {company.telefone}
+                      </p>
+                    )}
+                    {company.endereco && (
+                      <p className="text-[9px] text-slate-500 font-medium leading-tight block mt-1 truncate border-t border-slate-850 pt-1 font-sans">
+                        📍 {company.endereco}
+                      </p>
+                    )}
+                  </div>
+                </div>
               </div>
             </motion.nav>
           </div>
@@ -1094,25 +1118,49 @@ export default function App() {
             </button>
           )}
           
-          <button
+          <div 
             onClick={handleOpenCompanyEdit}
-            type="button"
-            className="w-full flex items-center gap-3 px-1.5 py-1.5 rounded-lg hover:bg-slate-850/60 text-left transition-all cursor-pointer border border-transparent hover:border-slate-800 group"
+            className="w-full text-left bg-slate-900 border border-slate-850 rounded-xl p-3.5 text-slate-100 shadow-md cursor-pointer hover:border-slate-700 hover:bg-slate-850/40 transition group"
             title="Clique para cadastrar ou editar os dados da empresa"
           >
-            <div className="w-8 h-8 rounded bg-slate-800 flex items-center justify-center text-[10px] font-black text-blue-450 border border-slate-700 shrink-0 uppercase group-hover:text-blue-300">
-              {company.razaoSocial ? company.razaoSocial.split(' ').map((w: string) => w[0]).slice(0, 2).join('') : 'EM'}
-            </div>
-            <div className="overflow-hidden flex-1">
-              <div className="flex items-center justify-between gap-1">
-                <span className="text-xs font-bold text-white truncate group-hover:text-blue-400 transition-colors">{company.razaoSocial}</span>
-                <span className="text-[8px] font-extrabold text-slate-400 bg-slate-800 px-1 py-0.5 rounded leading-none shrink-0 uppercase">
-                  {currentRole === 'Administrador' ? 'Editar' : 'Ver'}
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <div className="p-1 bg-indigo-500/10 rounded text-indigo-400 shrink-0">
+                  <Building2 className="w-3.5 h-3.5" />
+                </div>
+                <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 leading-none">
+                  Painel da Empresa
                 </span>
               </div>
-              <p className="text-[10px] text-slate-500 font-bold block mt-1 leading-none truncate font-mono">CNPJ: {company.cnpj}</p>
+              <span className="text-[8px] font-extrabold text-indigo-400 bg-indigo-950/40 px-1.5 py-0.5 rounded border border-indigo-900/30 shrink-0 uppercase leading-none">
+                {currentRole === 'Administrador' ? 'Editar' : 'Ver'}
+              </span>
             </div>
-          </button>
+
+            <div className="space-y-1">
+              <h4 className="text-xs font-extrabold text-white leading-tight group-hover:text-blue-400 transition-colors truncate font-sans">
+                {company.razaoSocial}
+              </h4>
+              {company.nomeFantasia && (
+                <p className="text-[10px] text-blue-400 font-extrabold leading-none truncate font-sans">
+                  {company.nomeFantasia}
+                </p>
+              )}
+              <p className="text-[9px] text-slate-400 font-medium block leading-none font-mono">
+                CNPJ: <span className="text-indigo-200">{company.cnpj}</span>
+              </p>
+              {company.telefone && (
+                <p className="text-[9px] text-slate-400 block leading-none">
+                  📞 {company.telefone}
+                </p>
+              )}
+              {company.endereco && (
+                <p className="text-[9px] text-slate-500 font-medium leading-tight block mt-1 truncate border-t border-slate-850 pt-1 font-sans">
+                  📍 {company.endereco}
+                </p>
+              )}
+            </div>
+          </div>
         </div>
       </nav>
 
