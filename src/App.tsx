@@ -290,7 +290,7 @@ export default function App() {
   // Show import/export notification
   const [showDbNotice, setShowDbNotice] = useState(false);
 
-  // Load state from localStorage on mount
+  // Load state from localStorage on mount and fetch cloud database
   useEffect(() => {
     const savedVehicles = localStorage.getItem('cnpj_vehicles');
     const savedDrivers = localStorage.getItem('cnpj_drivers');
@@ -300,52 +300,27 @@ export default function App() {
     const savedFuel = localStorage.getItem('cnpj_fuel_logs');
     const savedCompanyInfo = localStorage.getItem('cnpj_company_info');
 
-    if (savedVehicles) {
-      setVehicles(JSON.parse(savedVehicles));
-    } else {
-      setVehicles(initialVehicles);
-      localStorage.setItem('cnpj_vehicles', JSON.stringify(initialVehicles));
-    }
+    // 1. Carrega imediatamente dados locais (cache rápido)
+    if (savedVehicles) setVehicles(JSON.parse(savedVehicles));
+    else setVehicles(initialVehicles);
 
-    if (savedDrivers) {
-      setDrivers(JSON.parse(savedDrivers));
-    } else {
-      setDrivers(initialDrivers);
-      localStorage.setItem('cnpj_drivers', JSON.stringify(initialDrivers));
-    }
+    if (savedDrivers) setDrivers(JSON.parse(savedDrivers));
+    else setDrivers(initialDrivers);
 
-    if (savedTrips) {
-      setTrips(JSON.parse(savedTrips));
-    } else {
-      setTrips(initialTripLogs);
-      localStorage.setItem('cnpj_trips', JSON.stringify(initialTripLogs));
-    }
+    if (savedTrips) setTrips(JSON.parse(savedTrips));
+    else setTrips(initialTripLogs);
 
-    if (savedMaintenances) {
-      setMaintenances(JSON.parse(savedMaintenances));
-    } else {
-      setMaintenances(initialMaintenances);
-      localStorage.setItem('cnpj_maintenances', JSON.stringify(initialMaintenances));
-    }
+    if (savedMaintenances) setMaintenances(JSON.parse(savedMaintenances));
+    else setMaintenances(initialMaintenances);
 
-    if (savedFines) {
-      setFines(JSON.parse(savedFines));
-    } else {
-      setFines(initialFines);
-      localStorage.setItem('cnpj_fines', JSON.stringify(initialFines));
-    }
+    if (savedFines) setFines(JSON.parse(savedFines));
+    else setFines(initialFines);
 
-    if (savedFuel) {
-      setFuelLogs(JSON.parse(savedFuel));
-    } else {
-      const initialFuelLogs: FuelLog[] = [];
-      setFuelLogs(initialFuelLogs);
-      localStorage.setItem('cnpj_fuel_logs', JSON.stringify(initialFuelLogs));
-    }
+    const initialFuelLogs: FuelLog[] = [];
+    if (savedFuel) setFuelLogs(JSON.parse(savedFuel));
+    else setFuelLogs(initialFuelLogs);
 
-    if (savedCompanyInfo) {
-      setCompany(JSON.parse(savedCompanyInfo));
-    }
+    if (savedCompanyInfo) setCompany(JSON.parse(savedCompanyInfo));
 
     const savedUsers = localStorage.getItem('cnpj_users');
     const savedSessionUser = localStorage.getItem('cnpj_session_user');
@@ -354,7 +329,6 @@ export default function App() {
     if (savedUsers) {
       setUsers(JSON.parse(savedUsers));
     } else {
-      // Seed default admin
       const initialUsers = [{ username: 'admin', passwordHash: btoa('admin'), role: 'Administrador' }];
       setUsers(initialUsers);
       localStorage.setItem('cnpj_users', JSON.stringify(initialUsers));
@@ -364,42 +338,110 @@ export default function App() {
       setCurrentUser(savedSessionUser);
       setCurrentRole(savedSessionRole as 'Administrador' | 'Operador');
     }
+
+    // 2. Busca o estado real e mais recente da nuvem (Vercel KV) de forma assíncrona
+    const fetchCloudData = async () => {
+      setDriveSyncState((prev: any) => ({ ...prev, status: 'connecting' }));
+      try {
+        const response = await fetch('/api/db');
+        if (response.ok) {
+          const data = await response.json();
+          if (data && (data.vehicles || data.drivers || data.trips)) {
+            // Aplica os dados centralizados
+            handleApplyCloudData(data);
+            setDriveSyncState({
+              status: 'connected',
+              lastSync: new Date().toLocaleTimeString('pt-BR'),
+              errorMessage: undefined,
+              userEmail: 'Conexão Cloud Ativa',
+              userPicture: undefined
+            });
+            setIsDriveConnected(true);
+          } else {
+            // Se o banco na nuvem estiver vazio, envia os dados locais atuais como padrão
+            const currentPayload = {
+              vehicles: savedVehicles ? JSON.parse(savedVehicles) : initialVehicles,
+              drivers: savedDrivers ? JSON.parse(savedDrivers) : initialDrivers,
+              trips: savedTrips ? JSON.parse(savedTrips) : initialTripLogs,
+              maintenances: savedMaintenances ? JSON.parse(savedMaintenances) : initialMaintenances,
+              fines: savedFines ? JSON.parse(savedFines) : initialFines,
+              fuelLogs: savedFuel ? JSON.parse(savedFuel) : [],
+              company: savedCompanyInfo ? JSON.parse(savedCompanyInfo) : {},
+              users: savedUsers ? JSON.parse(savedUsers) : [{ username: 'admin', passwordHash: btoa('admin'), role: 'Administrador' }]
+            };
+            
+            await fetch('/api/db', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(currentPayload)
+            });
+
+            setDriveSyncState({
+              status: 'connected',
+              lastSync: new Date().toLocaleTimeString('pt-BR'),
+              errorMessage: undefined,
+              userEmail: 'Conexão Cloud Ativa',
+              userPicture: undefined
+            });
+            setIsDriveConnected(true);
+          }
+        } else {
+          throw new Error('Falha de resposta do servidor KV');
+        }
+      } catch (err: any) {
+        console.error('Erro na sincronização inicial com a nuvem:', err);
+        setDriveSyncState((prev: any) => ({
+          ...prev,
+          status: 'error',
+          errorMessage: 'Conexão pendente com o Vercel KV no painel Storage.'
+        }));
+      }
+    };
+
+    fetchCloudData();
   }, []);
 
-  // Sync state to localstorage helper
+  // Sync state to localstorage and cloud database
   const syncAndSave = (key: string, data: any, setter: Function) => {
     setter(data);
     localStorage.setItem(key, JSON.stringify(data));
     
-    // Se o Google Drive estiver conectado, envia as alterações
-    if (localStorage.getItem('gdrive_access_token') && localStorage.getItem('gdrive_file_id')) {
-      const latestPayload = {
-        vehicles: key === 'cnpj_vehicles' ? data : vehicles,
-        drivers: key === 'cnpj_drivers' ? data : drivers,
-        trips: key === 'cnpj_trips' ? data : trips,
-        maintenances: key === 'cnpj_maintenances' ? data : maintenances,
-        fines: key === 'cnpj_fines' ? data : fines,
-        fuelLogs: key === 'cnpj_fuel_logs' ? data : fuelLogs,
-        company: key === 'cnpj_company_info' ? data : company,
-        users: key === 'cnpj_users' ? data : users, // INCLUDE USERS!
-      };
-      
-      // Envio em segundo plano
-      const token = localStorage.getItem('gdrive_access_token');
-      const fileId = localStorage.getItem('gdrive_file_id');
-      if (token && fileId) {
-        updateDriveFile(token, fileId, latestPayload).then(() => {
-          setDriveSyncState((prev: any) => ({
-            ...prev,
-            status: 'connected',
-            lastSync: new Date().toLocaleTimeString('pt-BR'),
-            errorMessage: undefined
-          }));
-        }).catch((err: any) => {
-          console.error('Erro na sincronização em background:', err);
-        });
+    // Constrói o payload completo atualizado da frota
+    const latestPayload = {
+      vehicles: key === 'cnpj_vehicles' ? data : vehicles,
+      drivers: key === 'cnpj_drivers' ? data : drivers,
+      trips: key === 'cnpj_trips' ? data : trips,
+      maintenances: key === 'cnpj_maintenances' ? data : maintenances,
+      fines: key === 'cnpj_fines' ? data : fines,
+      fuelLogs: key === 'cnpj_fuel_logs' ? data : fuelLogs,
+      company: key === 'cnpj_company_info' ? data : company,
+      users: key === 'cnpj_users' ? data : users,
+    };
+    
+    // Salva na nuvem Vercel KV em background
+    fetch('/api/db', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(latestPayload)
+    }).then((res) => {
+      if (res.ok) {
+        setDriveSyncState((prev: any) => ({
+          ...prev,
+          status: 'connected',
+          lastSync: new Date().toLocaleTimeString('pt-BR'),
+          errorMessage: undefined
+        }));
+      } else {
+        throw new Error('Erro ao salvar dados na nuvem');
       }
-    }
+    }).catch((err) => {
+      console.error('Erro ao sincronizar com Vercel KV:', err);
+      setDriveSyncState((prev: any) => ({
+        ...prev,
+        status: 'error',
+        errorMessage: 'Alteração salva apenas localmente. Erro ao sincronizar com Vercel KV.'
+      }));
+    });
   };
 
   // 1. Vehicle Operations
