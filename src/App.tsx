@@ -37,6 +37,9 @@ import { TripsTab } from './components/TripsTab';
 import { MaintenanceTab } from './components/MaintenanceTab';
 import { FinesTab } from './components/FinesTab';
 
+// Google Drive Sync
+import { GoogleDriveSync, updateDriveFile } from './components/GoogleDriveSync';
+
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
 
@@ -47,6 +50,62 @@ export default function App() {
   const [maintenances, setMaintenances] = useState<Maintenance[]>([]);
   const [fines, setFines] = useState<Fine[]>([]);
   const [fuelLogs, setFuelLogs] = useState<FuelLog[]>([]);
+
+  // Google Drive State
+  const [isDriveConnected, setIsDriveConnected] = useState(false);
+  const [driveSyncState, setDriveSyncState] = useState({
+    status: 'unconfigured',
+    lastSync: null,
+    errorMessage: undefined,
+    userEmail: undefined,
+    userPicture: undefined
+  });
+
+  // Helper to retrieve current app data in unified JSON format
+  const getCurrentAppData = () => {
+    return {
+      vehicles,
+      drivers,
+      trips,
+      maintenances,
+      fines,
+      fuelLogs,
+      company
+    };
+  };
+
+  // Helper to overwrite current app data with sync data from cloud
+  const handleApplyCloudData = (data: any) => {
+    if (!data) return;
+    if (data.vehicles) {
+      setVehicles(data.vehicles);
+      localStorage.setItem('cnpj_vehicles', JSON.stringify(data.vehicles));
+    }
+    if (data.drivers) {
+      setDrivers(data.drivers);
+      localStorage.setItem('cnpj_drivers', JSON.stringify(data.drivers));
+    }
+    if (data.trips) {
+      setTrips(data.trips);
+      localStorage.setItem('cnpj_trips', JSON.stringify(data.trips));
+    }
+    if (data.maintenances) {
+      setMaintenances(data.maintenances);
+      localStorage.setItem('cnpj_maintenances', JSON.stringify(data.maintenances));
+    }
+    if (data.fines) {
+      setFines(data.fines);
+      localStorage.setItem('cnpj_fines', JSON.stringify(data.fines));
+    }
+    if (data.fuelLogs) {
+      setFuelLogs(data.fuelLogs);
+      localStorage.setItem('cnpj_fuel_logs', JSON.stringify(data.fuelLogs));
+    }
+    if (data.company) {
+      setCompany(data.company);
+      localStorage.setItem('cnpj_company_info', JSON.stringify(data.company));
+    }
+  };
 
   // Company State Definition
   const [company, setCompany] = useState<CompanySettings>({
@@ -91,8 +150,7 @@ export default function App() {
       email: compEmail,
       endereco: compEnd,
     };
-    setCompany(updated);
-    localStorage.setItem('cnpj_company_info', JSON.stringify(updated));
+    syncAndSave('cnpj_company_info', updated, setCompany);
     setShowCompanyModal(false);
     alert('Dados cadastrais da empresa atualizados com sucesso!');
   };
@@ -166,6 +224,35 @@ export default function App() {
   const syncAndSave = (key: string, data: any, setter: Function) => {
     setter(data);
     localStorage.setItem(key, JSON.stringify(data));
+    
+    // Se o Google Drive estiver conectado, envia as alterações
+    if (localStorage.getItem('gdrive_access_token') && localStorage.getItem('gdrive_file_id')) {
+      const latestPayload = {
+        vehicles: key === 'cnpj_vehicles' ? data : vehicles,
+        drivers: key === 'cnpj_drivers' ? data : drivers,
+        trips: key === 'cnpj_trips' ? data : trips,
+        maintenances: key === 'cnpj_maintenances' ? data : maintenances,
+        fines: key === 'cnpj_fines' ? data : fines,
+        fuelLogs: key === 'cnpj_fuel_logs' ? data : fuelLogs,
+        company: key === 'cnpj_company_info' ? data : company,
+      };
+      
+      // Envio em segundo plano
+      const token = localStorage.getItem('gdrive_access_token');
+      const fileId = localStorage.getItem('gdrive_file_id');
+      if (token && fileId) {
+        updateDriveFile(token, fileId, latestPayload).then(() => {
+          setDriveSyncState((prev: any) => ({
+            ...prev,
+            status: 'connected',
+            lastSync: new Date().toLocaleTimeString('pt-BR'),
+            errorMessage: undefined
+          }));
+        }).catch((err: any) => {
+          console.error('Erro na sincronização em background:', err);
+        });
+      }
+    }
   };
 
   // 1. Vehicle Operations
@@ -751,6 +838,16 @@ export default function App() {
         {/* Primary Page Work Area */}
         <main className="flex-1 bg-slate-100 p-4 sm:p-6 lg:p-8" id="primary-main-view">
           <div className="mx-auto max-w-7xl">
+            
+            <GoogleDriveSync 
+              onSyncComplete={handleApplyCloudData}
+              getCurrentData={getCurrentAppData}
+              isConnected={isDriveConnected}
+              setIsConnected={setIsDriveConnected}
+              syncState={driveSyncState}
+              setSyncState={setDriveSyncState}
+            />
+
             {activeTab === 'dashboard' && (
               <Dashboard 
                 vehicles={vehicles}
