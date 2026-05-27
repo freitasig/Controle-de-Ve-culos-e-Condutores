@@ -18,7 +18,8 @@ import {
   ArrowUpToLine,
   RefreshCw,
   Info,
-  Building2
+  Building2,
+  User
 } from 'lucide-react';
 import { Vehicle, Driver, TripLog, Maintenance, Fine, FuelLog, CompanySettings } from './types';
 import { 
