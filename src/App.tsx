@@ -44,6 +44,9 @@ import { GoogleDriveSync, updateDriveFile } from './components/GoogleDriveSync';
 // Login Portal
 import { LoginPortal } from './components/LoginPortal';
 
+// Logo Asset
+import profrotaLogo from '../assets/profrota_logo.png';
+
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
 
@@ -685,7 +688,7 @@ export default function App() {
         <div className="p-6 border-b border-slate-800">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded bg-slate-800 flex items-center justify-center text-white shadow-md overflow-hidden shrink-0 border border-slate-700 shadow-blue-950/40">
-              <img src="/assets/profrota_logo.png" alt="ProFrota Logo" className="w-full h-full object-cover scale-110" />
+              <img src={profrotaLogo} alt="ProFrota Logo" className="w-full h-full object-cover scale-110" />
             </div>
             <div>
               <span className="font-extrabold text-base tracking-tight text-white block uppercase">PROFROTA</span>
@@ -860,7 +863,7 @@ export default function App() {
               {/* Mobile Branding block */}
               <div className="flex items-center gap-2 lg:hidden">
                 <div className="w-7 h-7 rounded bg-slate-100 border border-slate-200 overflow-hidden flex items-center justify-center">
-                  <img src="/assets/profrota_logo.png" alt="ProFrota Logo" className="w-full h-full object-cover scale-110" />
+                  <img src={profrotaLogo} alt="ProFrota Logo" className="w-full h-full object-cover scale-110" />
                 </div>
                 <div>
                   <span className="font-extrabold text-sm tracking-tight text-slate-900 uppercase">PROFROTA</span>

@@ -6,6 +6,7 @@
 import React, { useState } from 'react';
 import { Shield, User, Lock, KeyRound, UserPlus, AlertCircle, Sparkles, HelpCircle, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import profrotaLogo from '../../assets/profrota_logo.png';
 
 interface LoginPortalProps {
   onLoginSuccess: (username: string, role: 'Administrador' | 'Operador') => void;
@@ -210,7 +211,7 @@ export const LoginPortal: React.FC<LoginPortalProps> = ({
             className="w-20 h-20 mb-3 bg-slate-800/80 p-2.5 rounded-2xl border border-slate-700 shadow-inner flex items-center justify-center overflow-hidden"
           >
             <img 
-              src="/assets/profrota_logo.png" 
+              src={profrotaLogo} 
               alt="Logo ProFrota" 
               className="w-full h-full object-cover scale-110"
               onError={(e) => {
