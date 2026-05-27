@@ -338,11 +338,7 @@ export default function App() {
     if (savedFuel) {
       setFuelLogs(JSON.parse(savedFuel));
     } else {
-      const initialFuelLogs: FuelLog[] = [
-        { id: 'fl-1', vehicleId: 'v-1', date: '2026-05-18', liters: 45, cost: 250.20, odometer: 154300, fuelType: 'diesel' },
-        { id: 'fl-2', vehicleId: 'v-2', date: '2026-05-20', liters: 32, cost: 185.60, odometer: 88400, fuelType: 'gasolina' },
-        { id: 'fl-3', vehicleId: 'v-3', date: '2026-05-22', liters: 40, cost: 220.00, odometer: 124300, fuelType: 'etanol' },
-      ];
+      const initialFuelLogs: FuelLog[] = [];
       setFuelLogs(initialFuelLogs);
       localStorage.setItem('cnpj_fuel_logs', JSON.stringify(initialFuelLogs));
     }
